@@ -17,7 +17,7 @@ The code for the framework is located on [CommunicationPrimitives/protocols/broa
 
 The execution flow of the framework is depicted int the following figure:
 
-<img src="framework.png" align="middle" width="600">
+<img src="framework.png" align="center" width="600">
 
 Upon the broadcast of a message by a node, its neighbors, upon receiving it, verify if it is a new message or a duplicate (Each message is uniquely identified by a uuid). 
 If it is a duplicate, and if the framework is still processing that message, its reception is merely recorded. 
