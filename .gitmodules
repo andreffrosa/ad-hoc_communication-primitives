@@ -1,0 +1,3 @@
+[submodule "Yggdrasil"]
+	path = Yggdrasil
+	url = git@github.com:LightKone/Yggdrasil.git
