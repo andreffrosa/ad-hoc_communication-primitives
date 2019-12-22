@@ -35,7 +35,7 @@ typedef struct _message_item {
 } message_item;
 ```
 
-And each copy received has the following structure:
+And each copy stored has the following structure:
 
 ```c
 typedef struct _message_copy {
@@ -45,6 +45,8 @@ typedef struct _message_copy {
 	unsigned int phase;		 // Phase in which the copy was received
 } message_copy;
 ```
+
+### Retransmission Delay
 
 Otherwise, if it is the first reception, the retransmission process begins.
 First, a Retransmission Delay is computed. 
@@ -61,6 +63,8 @@ With:
 * `RetransmissionContext* r_context`: Pointer to the Retransmission Context in order to query it if necessary. (Explained below)
 
 Examples of Retransmission Delays can be found on: [CommunicationPrimitives/protocols/broadcast/framework/r_delays/](CommunicationPrimitives/protocols/broadcast/framework/r_delays/).
+
+### Retransmission Context
 
 Some of these functions may require access to external information. 
 To the source of this information, we called it Retransmission Context, and corresponds to another parameter of the framework.
@@ -105,6 +109,8 @@ This parameter interacts with the framework through the following functions:
 
 Examples of Retransmission Contexts can be found on: [CommunicationPrimitives/protocols/broadcast/framework/r_contexts/](CommunicationPrimitives/protocols/broadcast/framework/r_contexts/).
 
+### Retransmission Policy
+
 After waiting for the stipulated period, the Retransmission Policy (another parameter) is executed.
 This corresponds to the (local) strategy of each process in deciding to retransmit (or not) a given message and attempts to avoid redundant retransmissions and/or to ensure that new nodes receive the message. 
 This component can also consult the Retransmission Context and, additionally, consult information regarding the duplicates received.
@@ -117,12 +123,20 @@ It has the following interface:
 
 Examples of Retransmission Policies can be found on: [CommunicationPrimitives/protocols/broadcast/framework/r_policies/](CommunicationPrimitives/protocols/broadcast/framework/r_policies/).
 
+### Retransmission Phase
+
 Regardless of the decision, the workﬂow proceeds by verifying if the protocol has reached the last retransmission phase.
 It compares the current phase of the protocol with another framework's parameter: the number of retransmission phases associated with that protocol (NP).
 
 If the generic protocol was conﬁgured to execute additional retransmission phases, the current phase is incremented, and the protocol goes back to the computation of the retransmission delay. Otherwise, the workﬂow for the current message terminates (and information about duplicates received for that message can be garbage collected).
 
-each broadcast algorithm can be specified with the following function:
+### Querying the Context
+
+(TODO)
+
+### Specifying a Broadcast Algorithm
+
+Each broadcast algorithm can be specified with the following function:
 * `BroadcastAlgorithm newBcastAlgorithm(RetransmissionContext r_context, RetransmissionDelay r_delay, RetransmissionPolicy r_policy, unsigned int n_phases)`:
   * `RetransmissionContext r_context`: Gathers information (even if imprecise) on the execution environment of the protocol, to be leveraged by the Retransmission Policy and Delay in their decisions.
   * `RetransmissionDelay r_delay`: Corresponds to the (typically local) decision of wheter or not a given node should retransmit a certain received message.
@@ -132,5 +146,7 @@ each broadcast algorithm can be specified with the following function:
 Examples of Broadcast Algorithms' specifications can be found on: [CommunicationPrimitives/protocols/broadcast/framework/bcast_algorithms.c](CommunicationPrimitives/protocols/broadcast/framework/bcast_algorithms.c).
 
 ## Topology Discovery Protocol
+
+Some of the implemented broadcast algorithms require acces to the local topology their neighborhoods, up to a given number of hops (the horizon). To materialize this context, we devised a Discovery Protocol, that runs alongside the framework, which gather this information and notifies the Retransmission Context when a change on the neighborhood occurs. Subsequently, the Retransission Context can be queried  by the Retransmission Policy or the Retransmission Delay, about this information.
 
 (TODO)
