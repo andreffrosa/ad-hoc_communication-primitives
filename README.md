@@ -45,7 +45,6 @@ typedef struct _message_copy {
 	unsigned int phase;		 // Phase in which the copy was received
 } message_copy;
 ```
-
 ### Retransmission Delay
 
 Otherwise, if it is the first reception, the retransmission process begins.
@@ -95,7 +94,7 @@ This parameter interacts with the framework through the following functions:
   * `va_list* argv`: List of parameters that were passed with the query
   * `RetransmissionContext* r_context`: Pointer to the Retransmission Context in order to query it if necessary.
 
-* `bool ContextQueryHeader(void* context_args, void* context_state, void* header, unsigned int header_size, char* query, void* result, int argc, va_list* argv, RetransmissionContext* r_context)`: Processses a query to the appended information on the message (more than one field can be inserted and by multiple contexts). Returns true if the query could be processed and false otherwise.
+* `bool ContextQueryHeader(void* context_args, void* context_state, void* header, unsigned int header_size, char* query, void* result, int argc, va_list* argv, RetransmissionContext* r_context)`: Processses a query to Retansmission Context's header of the message (more than one field can be inserted and by multiple contexts). Returns true if the query could be processed and false otherwise.
   * `void* context_args`: Pointer to the arguments of the context (optional).
   * `void* context_state`: Pointer to the state of the context (optional).
   * `void* header`: Pointer to the information that was appended to the message by the context.
@@ -110,7 +109,32 @@ Examples of Retransmission Contexts can be found on: [CommunicationPrimitives/pr
 
 #### Querying the Context
 
-(TODO)
+Query the retransmission context:
+```c
+bool query_context(RetransmissionContext* r_context, char* query, void* result, int argc, ...)
+```
+* `RetransmissionContext* r_context`: Pointer to the Retransmission Context.
+* `char* query`: C String containing the query.
+* `void* result`: Pointer to the variable that will store the result (if the query can be processed).
+* `int argc`: Number of parameters that were passed with the query
+* `...`: Sequence of parameters to pass along with the query (optional)
+
+Returns true if the query could be processed and false otherwise.
+
+
+Query the Retransmission's Context header (appended information by the Retransmission Context) of a given message copy:
+```c
+bool query_context_header(RetransmissionContext* r_context, void* context_header, unsigned int context_length, char* query, void* result, int argc, ...)
+```
+* `RetransmissionContext* r_context`: Pointer to the Retransmission Context.
+* `void* context_header`: Pointer to the Retransmission's Context header.
+* `unsigned int context_length`: length of the Retransmission's Context header.
+* `char* query`: C String containing the query.
+* `void* result`: Pointer to the variable that will store the result (if the query can be processed).
+* `int argc`: Number of parameters that were passed with the query
+* `...`: Sequence of parameters to pass along with the query (optional)
+
+Returns true if the query could be processed and false otherwise.
 
 ### Retransmission Policy
 
@@ -144,8 +168,55 @@ Each broadcast algorithm can be specified with the following function:
 
 Examples of Broadcast Algorithms' specifications can be found on: [CommunicationPrimitives/protocols/broadcast/framework/bcast_algorithms.c](CommunicationPrimitives/protocols/broadcast/framework/bcast_algorithms.c).
 
+
+### Leveraging the Framework
+
+Request to the framework a broadcast of a message:
+```c
+YggRequest framework_bcast_req;
+YggRequest_init(&framework_bcast_req, appID, BCAST_FRAMEWORK_PROTO_ID, REQUEST, FRAMEWORK_BCAST_MSG_REQ);
+char* msg = "Hello World!";
+YggRequest_addPayload(framework_bcast_req, msg, strlen(msg)+1);
+deliverRequest(framework_bcast_req);
+YggRequest_freePayload(framework_bcast_req);
+```
+
+* `appID`: id of the application requesting the broadcast
+* `BCAST_FRAMEWORK_PROTO_ID`: id of the framework 
+* `FRAMEWORK_BCAST_MSG_REQ`: Type of request (broadcast in this case)
+
+Examples of how build an application that leverages on this framework to broadcast a message can be found on:  [CommunicationPrimitives/applications/bcast_framework_test.c](CommunicationPrimitives/applications/bcast_framework_test.c).
+
 ## Topology Discovery Protocol
 
 Some of the implemented broadcast algorithms require acces to the local topology their neighborhoods, up to a given number of hops (the horizon). To materialize this context, we devised a Discovery Protocol, that runs alongside the framework, which gather this information and notifies the Retransmission Context when a change on the neighborhood occurs. Subsequently, the Retransission Context can be queried  by the Retransmission Policy or the Retransmission Delay, about this information.
 
-(TODO)
+This protocol produces the following events:
+* *NEIGHBOR_FOUND*: When a new neighbor is found.
+* *NEIGHBOR_UPDATE*: When the neighborhood of a direct neighbor changes
+* *NEIGHBOR_LOST*: When a neighbor is lost.
+* *NEIGHBORHOOD_UPDATE*: When the neighborhood changes (any of the above events)
+
+The payload of these events has the following format:
+```
+(1 byte)      				H	Horizon
+(H+1 bytes)   				PTRS	Size of each neighborhood level summed (from 0 to Horizon); The last is the size of the dicitionary
+(PTRS[H]*(sizeof(uuid_t)+1) bytes)	DIC	Dictionary of pairs (id, n) // (uuid, number of direct neighbors)
+For each entry e on DIC:
+    (e.n bytes) indexes (1 byte each), on the DIC, of the neighbors of the node e.id
+```
+
+The arguments of this protocol are the following:
+```c
+typedef struct _topology_discovery_args {
+	unsigned char horizon; // Max number of hops to discover neighbors
+	unsigned long max_jitter; // Interval in which the random delay is calculated (ms)
+	unsigned long heartbeat_period; // Maximum time between announcements (ms)
+	unsigned long t_gc; // Maximum time between garbage collector executions (ms)
+	unsigned int misses; // Maximum heartbeats missed to consider neighbor as a failed node
+} topology_discovery_args;
+```
+
+The code of this protocol can be found on:  [CommunicationPrimitives/protocols/discovery/topology_discovery.c](CommunicationPrimitives/protocols/discovery/topology_discovery.c).
+The code of a context that lauches this protocol can be found on: [CommunicationPrimitives/protocols/broadcast/framework/r_contexts/NeighborsContext.c](CommunicationPrimitives/protocols/broadcast/framework/r_contexts/NeighborsContext.c).
+
