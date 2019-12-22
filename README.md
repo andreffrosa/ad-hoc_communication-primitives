@@ -89,8 +89,7 @@ This parameter interacts with the framework through the following functions:
 
 * `bool ContextQuery(void* context_args, void* context_state, char* query, void* result, int argc, va_list* argv, RetransmissionContext* r_context)`: Processes a query to the context and returns true if the query could be process or false otherwise.
   * `void* context_args`: Pointer to the arguments of the context (optional).
-  * `void* context_state`: Pointer to the state of the context (optional).
-  * `char* query`: C String containing the query.
+  * `void* context_state`: Pointer to the state of the context (optional).  * `char* query`: C String containing the query.
   * `void* result`: Pointer to the variable that will store the result (if the query can be processed).
   * `int argc`: Number of parameters that were passed with the query
   * `va_list* argv`: List of parameters that were passed with the query
@@ -108,6 +107,10 @@ This parameter interacts with the framework through the following functions:
   * `RetransmissionContext* r_context`: Pointer to the Retransmission Context in order to query it if necessary.
 
 Examples of Retransmission Contexts can be found on: [CommunicationPrimitives/protocols/broadcast/framework/r_contexts/](CommunicationPrimitives/protocols/broadcast/framework/r_contexts/).
+
+#### Querying the Context
+
+(TODO)
 
 ### Retransmission Policy
 
@@ -129,10 +132,6 @@ Regardless of the decision, the workﬂow proceeds by verifying if the protocol 
 It compares the current phase of the protocol with another framework's parameter: the number of retransmission phases associated with that protocol (NP).
 
 If the generic protocol was conﬁgured to execute additional retransmission phases, the current phase is incremented, and the protocol goes back to the computation of the retransmission delay. Otherwise, the workﬂow for the current message terminates (and information about duplicates received for that message can be garbage collected).
-
-### Querying the Context
-
-(TODO)
 
 ### Specifying a Broadcast Algorithm
 
