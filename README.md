@@ -217,6 +217,7 @@ typedef struct _topology_discovery_args {
 } topology_discovery_args;
 ```
 
-The code of this protocol can be found on:  [CommunicationPrimitives/protocols/discovery/topology_discovery.c](CommunicationPrimitives/protocols/discovery/topology_discovery.c).
-The code of a context that lauches this protocol can be found on: [CommunicationPrimitives/protocols/broadcast/framework/r_contexts/NeighborsContext.c](CommunicationPrimitives/protocols/broadcast/framework/r_contexts/NeighborsContext.c).
+The code of this protocol can be found on:  [CommunicationPrimitives/protocols/discovery/topology_discovery.c](CommunicationPrimitives/protocols/discovery/topology_discovery.c)
+
+The code of a context that lauches this protocol can be found on: [CommunicationPrimitives/protocols/broadcast/framework/r_contexts/NeighborsContext.c](CommunicationPrimitives/protocols/broadcast/framework/r_contexts/NeighborsContext.c)
 
